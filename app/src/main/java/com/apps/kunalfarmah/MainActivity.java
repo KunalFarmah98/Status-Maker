@@ -1,37 +1,52 @@
 package com.apps.kunalfarmah;
 
-import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.FileProvider;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
-import android.provider.MediaStore;
-import android.view.GestureDetector;
+import android.os.Environment;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
+    private static final String TAG = "MainActivity" ;
     private RelativeLayout mainLayout;
     private ImageView iv;
     private EditText et;
     private Button done;
+    private LinearLayout backgroundLL;
+    private ImageButton whatsApp;
+    private TextView status;
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
+    private Switch bckStyle;
     private boolean isPlain;
     public static int ind;
     private ArrayList<Integer> plainBg, imageBg;
@@ -45,15 +60,20 @@ public class MainActivity extends AppCompatActivity {
         et = findViewById(R.id.et_status);
         iv = findViewById(R.id.iv_background);
         done = findViewById(R.id.done);
+        bckStyle = findViewById(R.id.bck_type);
+        backgroundLL = findViewById(R.id.iv_background_style);
+        whatsApp = findViewById(R.id.share);
+        status = findViewById(R.id.tv_status);
         isPlain = true;
         ind = 0;
 
+        // setting up backgrounds, can be extended further by adding more images, colors
         plainBg = new ArrayList<>();
         imageBg = new ArrayList<>();
 
         plainBg.add(R.color.colorPrimary);
         plainBg.add(R.color.green);
-        plainBg.add(R.color.yellow);
+        plainBg.add(R.color.orange);
         plainBg.add(R.color.red);
         plainBg.add(R.color.hue);
 
@@ -63,66 +83,107 @@ public class MainActivity extends AppCompatActivity {
         imageBg.add(R.drawable.bck4);
         imageBg.add(R.drawable.bck5);
 
+        et.setTextColor(getResources().getColor(R.color.white));
+        et.setHintTextColor(getResources().getColor(R.color.white));
+
+        Toast.makeText(MainActivity.this, R.string.swipe_option,Toast.LENGTH_SHORT).show();
+
+        // implementing the gesture listener for the background
         OnSwipeTouchListener swipeTouchListener = new OnSwipeTouchListener(MainActivity.this) {
             public void onSwipeRight() {
                 if (ind > 0) {
                     --ind;
                     if (isPlain) {
                         iv.setBackgroundColor(getResources().getColor(plainBg.get(ind)));
-                        getSupportActionBar().setBackgroundDrawable(getResources().getDrawable(plainBg.get(ind)));
                     } else {
                         iv.setBackgroundResource(imageBg.get(ind));
-                        getSupportActionBar().setBackgroundDrawable(getDrawable(R.color.colorPrimary));
 
                     }
                 }
             }
-
             public void onSwipeLeft() {
                 if (ind < 5) {
                     ++ind;
                     if (isPlain) {
                         iv.setBackgroundColor(getResources().getColor(plainBg.get(ind)));
-                        getSupportActionBar().setBackgroundDrawable(getResources().getDrawable(plainBg.get(ind)));
                     } else {
                         iv.setBackgroundResource(imageBg.get(ind));
-                        getSupportActionBar().setBackgroundDrawable(getDrawable(R.color.colorPrimary));
                     }
                 }
             }
         };
 
-        et.setTextColor(getResources().getColor(R.color.white));
-        et.setHintTextColor(getResources().getColor(R.color.white));
         iv.setOnTouchListener(swipeTouchListener);
 
-        done.setOnClickListener(new View.OnClickListener() {
+        // setting option for plain or image background
+        bckStyle.setChecked(false);
+            bckStyle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
-            public void onClick(View view) {
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(!b){
+                    isPlain = true;
+                    iv.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+                }
+                else{
+                    isPlain = false;
+                    iv.setBackgroundResource(R.drawable.bck1);
+                }
+            }
+        });
+
+        done.setOnClickListener(this);
+        whatsApp.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.share:
+                // checking storage permissions
+                if(!isStoragePermissionGranted())return;
+                whatsApp.setVisibility(View.GONE);
+                Toast.makeText(MainActivity.this, R.string.share_wa,Toast.LENGTH_SHORT).show();
+
+                // converting relative layout to bitmap
                 mainLayout.setDrawingCacheEnabled(true);
                 Bitmap bitmap = Bitmap.createBitmap(mainLayout.getDrawingCache());
                 mainLayout.setDrawingCacheEnabled(false);
 
+                // creating whatsApp share intent
                 Intent whatsappIntent = new Intent(Intent.ACTION_SEND);
-                whatsappIntent.setPackage("com.whatsapp");
-                whatsappIntent.putExtra(Intent.EXTRA_TEXT, "Check Out My Staus");
-                whatsappIntent.setDataAndType(getImageUri(MainActivity.this, bitmap), "*/*");
+                whatsappIntent.setPackage(getString(R.string.package_wa));
+                whatsappIntent.putExtra(Intent.EXTRA_STREAM, getImageUri(bitmap));
+                whatsappIntent.putExtra(Intent.EXTRA_TEXT, getString(R.string.check_status));
+                whatsappIntent.setType("image/*");
                 try {
                     startActivity(whatsappIntent);
                 } catch (android.content.ActivityNotFoundException ex) {
-                    Toast.makeText(MainActivity.this, "Whatsapp has not been installed.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, R.string.app_not_found, Toast.LENGTH_SHORT).show();
                 }
+                break;
 
-            }
-        });
+            case R.id.done:
+                // status can't be empty
+                if(et.getText().toString().equals("")){
+                    Toast.makeText(MainActivity.this, R.string.error1,Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                Toast.makeText(MainActivity.this, R.string.ready_share,Toast.LENGTH_SHORT).show();
+                // disabling gestures
+                iv.setEnabled(false);
 
-    }
+                et.setEnabled(false);
+                et.clearComposingText();
+                et.setVisibility(View.GONE);
 
-    public Uri getImageUri(Context inContext, Bitmap inImage) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
-        return Uri.parse(path);
+                // replacing edittext with textview
+                status.setText(et.getText());
+                status.setVisibility(View.VISIBLE);
+                done.setVisibility(View.GONE);
+                backgroundLL.setVisibility(View.GONE);
+                whatsApp.setVisibility(View.VISIBLE);
+                break;
+        }
     }
 
 
@@ -135,20 +196,120 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        ind = 0;
         switch (item.getItemId()) {
-            case R.id.plain:
-                isPlain = true;
-                iv.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
-                getSupportActionBar().setBackgroundDrawable(getResources().getDrawable(plainBg.get(ind)));
-                return true;
-            case R.id.image:
-                isPlain = false;
-                iv.setBackgroundResource(R.drawable.bck1);
-                getSupportActionBar().setBackgroundDrawable(getDrawable(R.color.colorPrimary));
+            case R.id.reset:
+                reset();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if(done.getVisibility()==View.GONE){
+            reset();
+        }
+        else{
+            super.onBackPressed();
+        }
+    }
+
+    void reset(){
+        ind=0;
+        iv.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
+        iv.setEnabled(true);
+        et.setText(null);
+        bckStyle.setChecked(false);
+        whatsApp.setVisibility(View.GONE);
+        done.setVisibility(View.VISIBLE);
+        status.setVisibility(View.GONE);
+        et.setVisibility(View.VISIBLE);
+        backgroundLL.setVisibility(View.VISIBLE);
+        et.setEnabled(true);
+    }
+
+
+    public  boolean isStoragePermissionGranted() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if (checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                Log.v(TAG,"Permission is granted1");
+                return true;
+            } else {
+
+                Log.v(TAG,"Permission is revoked1");
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 2);
+                return false;
+            }
+        }
+        else { //permission is automatically granted on sdk<23 upon installation
+            Log.v(TAG,"Permission is granted1");
+            return true;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case 2:
+                Log.d(TAG, "External storage2");
+                if(grantResults[0]== PackageManager.PERMISSION_GRANTED){
+                    Log.v(TAG,"Permission: "+permissions[0]+ "was "+grantResults[0]);
+                    // continue work that had asked for permission
+                    whatsApp.callOnClick();
+                }else{
+                    Toast.makeText(MainActivity.this,"Please Provide the Permission to Continue",Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case 3:
+                Log.d(TAG, "External storage1");
+                if(grantResults[0]== PackageManager.PERMISSION_GRANTED){
+                    Log.v(TAG,"Permission: "+permissions[0]+ "was "+grantResults[0]);
+                }else{
+                    Toast.makeText(MainActivity.this,"Please Provide the Permission to Continue",Toast.LENGTH_SHORT).show();
+                }
+                break;
+        }
+    }
+
+    public Uri getImageUri(Bitmap inImage) {
+        // getting a safe path for file which will be overwritten on every share as it
+        // is stored temporarily for sharing to make the app run in SDK 27+
+        File file = getOutputMediaFile();
+        if (file == null) {
+            Log.d(TAG,
+                    "Error creating media file, check storage permissions: ");// e.getMessage());
+            return null;
+        }
+        try {
+            FileOutputStream fos = new FileOutputStream(file);
+            inImage.compress(Bitmap.CompressFormat.PNG, 90, fos);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            Log.d(TAG, "File not found: " + e.getMessage());
+        } catch (IOException e) {
+            Log.d(TAG, "Error accessing file: " + e.getMessage());
+        }
+        Uri uri = FileProvider.getUriForFile(MainActivity.this, getApplicationContext().getPackageName() + ".provider", file);
+        return uri;
+    }
+
+    private  File getOutputMediaFile(){
+        File mediaStorageDir = new File(Environment.getExternalStorageDirectory()
+                + "/Android/data/"
+                + getApplicationContext().getPackageName()
+                + "/Files");
+        if (! mediaStorageDir.exists()){
+            if (! mediaStorageDir.mkdirs()){
+                return null;
+            }
+        }
+        File mediaFile;
+        String mImageName="status.jpg";
+        mediaFile = new File(mediaStorageDir.getPath() + File.separator + mImageName);
+        return mediaFile;
     }
 }

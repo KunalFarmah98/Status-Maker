@@ -5,4 +5,12 @@
     <string name="enter_your_text_here">Enter Your Text Here</string>
     <string name="plain_background">Plain Background</string>
     <string name="image_background">Image Background</string>
+    <string name="reset">Reset</string>
+    <string name="swipe_option">Swipe to change backgrounds</string>
+    <string name="share_wa">Sharing on WhatsApp</string>
+    <string name="check_status">Hey, Check Out My Status made by Status Maker App.</string>
+    <string name="app_not_found">Whatsapp has not been installed.</string>
+    <string name="package_wa">com.whatsapp</string>
+    <string name="error1">Please type a Message</string>
+    <string name="ready_share">Image Ready to be Shared</string>
 </resources>
