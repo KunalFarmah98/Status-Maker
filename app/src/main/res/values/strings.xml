@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Status Maker</string>
+    <string name="my_status">My Status</string>
+    <string name="done">Done</string>
+    <string name="enter_your_text_here">Enter Your Text Here</string>
+    <string name="plain_background">Plain Background</string>
+    <string name="image_background">Image Background</string>
+</resources>
