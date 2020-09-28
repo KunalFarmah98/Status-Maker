@@ -3,11 +3,9 @@
 
     <item
         android:id="@+id/plain"
-        android:title="@string/plain_background"
-        />
+        android:title="@string/plain_background" />
 
     <item
         android:id="@+id/image"
-        android:title="@string/image_background"
-        />
+        android:title="@string/image_background" />
 </menu>

@@ -34,7 +34,8 @@ public class MainActivity extends AppCompatActivity {
     private Button done;
     private boolean isPlain;
     public static int ind;
-    private ArrayList<Integer> plainBg,imageBg;
+    private ArrayList<Integer> plainBg, imageBg;
+
     @SuppressLint("ClickableViewAccessibility")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +45,7 @@ public class MainActivity extends AppCompatActivity {
         et = findViewById(R.id.et_status);
         iv = findViewById(R.id.iv_background);
         done = findViewById(R.id.done);
-        isPlain=true;
+        isPlain = true;
         ind = 0;
 
         plainBg = new ArrayList<>();
@@ -62,29 +63,28 @@ public class MainActivity extends AppCompatActivity {
         imageBg.add(R.drawable.bck4);
         imageBg.add(R.drawable.bck5);
 
-        OnSwipeTouchListener swipeTouchListener = new OnSwipeTouchListener(MainActivity.this){
+        OnSwipeTouchListener swipeTouchListener = new OnSwipeTouchListener(MainActivity.this) {
             public void onSwipeRight() {
-                if(ind>0){
+                if (ind > 0) {
                     --ind;
-                    if(isPlain){
+                    if (isPlain) {
                         iv.setBackgroundColor(getResources().getColor(plainBg.get(ind)));
                         getSupportActionBar().setBackgroundDrawable(getResources().getDrawable(plainBg.get(ind)));
-                    }
-                    else{
+                    } else {
                         iv.setBackgroundResource(imageBg.get(ind));
                         getSupportActionBar().setBackgroundDrawable(getDrawable(R.color.colorPrimary));
 
                     }
                 }
             }
+
             public void onSwipeLeft() {
-                if(ind<5){
+                if (ind < 5) {
                     ++ind;
-                    if(isPlain){
+                    if (isPlain) {
                         iv.setBackgroundColor(getResources().getColor(plainBg.get(ind)));
                         getSupportActionBar().setBackgroundDrawable(getResources().getDrawable(plainBg.get(ind)));
-                    }
-                    else{
+                    } else {
                         iv.setBackgroundResource(imageBg.get(ind));
                         getSupportActionBar().setBackgroundDrawable(getDrawable(R.color.colorPrimary));
                     }
@@ -106,11 +106,11 @@ public class MainActivity extends AppCompatActivity {
                 Intent whatsappIntent = new Intent(Intent.ACTION_SEND);
                 whatsappIntent.setPackage("com.whatsapp");
                 whatsappIntent.putExtra(Intent.EXTRA_TEXT, "Check Out My Staus");
-                whatsappIntent.setDataAndType(getImageUri(MainActivity.this, bitmap),"*/*");
+                whatsappIntent.setDataAndType(getImageUri(MainActivity.this, bitmap), "*/*");
                 try {
                     startActivity(whatsappIntent);
                 } catch (android.content.ActivityNotFoundException ex) {
-                    Toast.makeText(MainActivity.this,"Whatsapp has not been installed.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "Whatsapp has not been installed.", Toast.LENGTH_SHORT).show();
                 }
 
             }
@@ -135,15 +135,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        ind=0;
+        ind = 0;
         switch (item.getItemId()) {
             case R.id.plain:
-                isPlain=true;
+                isPlain = true;
                 iv.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
                 getSupportActionBar().setBackgroundDrawable(getResources().getDrawable(plainBg.get(ind)));
                 return true;
             case R.id.image:
-                isPlain=false;
+                isPlain = false;
                 iv.setBackgroundResource(R.drawable.bck1);
                 getSupportActionBar().setBackgroundDrawable(getDrawable(R.color.colorPrimary));
                 return true;
