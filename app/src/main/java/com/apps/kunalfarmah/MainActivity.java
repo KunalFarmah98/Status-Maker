@@ -120,6 +120,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             bckStyle.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                ind=0;
                 if(!b){
                     isPlain = true;
                     iv.setBackgroundColor(getResources().getColor(R.color.colorPrimary));
@@ -286,7 +287,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         try {
             FileOutputStream fos = new FileOutputStream(file);
-            inImage.compress(Bitmap.CompressFormat.PNG, 90, fos);
+            inImage.compress(Bitmap.CompressFormat.PNG, 100, fos);
             fos.close();
         } catch (FileNotFoundException e) {
             Log.d(TAG, "File not found: " + e.getMessage());
